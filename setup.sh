@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# # Install Python (if not already installed)
-# brew install python3.10
+# Install Python (if not already installed)
+brew install python3.10
 
 # Install virtualenv (if not already installed)
 pip install virtualenv

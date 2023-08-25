@@ -327,7 +327,7 @@ def ZipCodeSearch(driver,wait):
                     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input.form-control.ui-autocomplete-input')))
                     # Find an input field by its ID and type text into it
                     input_field = driver.find_element(By.CSS_SELECTOR,'input.form-control.ui-autocomplete-input')
-                    input_field.send_keys("san diego")
+                    input_field.send_keys(city)
                     dropdown_element = driver.find_element(By.ID,'ddlLicenseType')
                     dropdown = Select(dropdown_element)
                     options = dropdown.options
