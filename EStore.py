@@ -30,9 +30,23 @@ def format_header_and_subheader(worksheet, header_subheader_mapping):
     # Insert an empty row as the 3rd row
     worksheet.insert_rows(3)
 
-def append_live_data(worksheet, live_data):
-    for row_data in live_data:
-        worksheet.append(row_data)
+
+def find_empty_row(sheet):
+    empty_row = None
+    for row_idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
+        if all(cell is None for cell in row):
+            empty_row = row_idx
+            break
+
+    if empty_row is None:
+        empty_row = sheet.max_row + 1
+    return empty_row
+
+def append_live_data(worksheet,empty_row, live_data):
+    for col_idx,value in live_data:
+        # print(col_idx,value)
+        worksheet.cell(row=empty_row, column=col_idx, value=value)
+
 
 def auto_adjust_column_widths(worksheet):
     for col_idx, column_cells in enumerate(worksheet.columns, start=1):
@@ -44,38 +58,34 @@ def auto_adjust_column_widths(worksheet):
 def save_workbook(workbook, filename):
     workbook.save(filename)
 
-def main(header_subheader_mapping,live_data):
+def main(live_data):
     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
     filename = f"output_{current_date}.xlsx"
     
     workbook = create_or_load_workbook(filename)
     worksheet = workbook.active
 
-    
+    header_subheader_mapping = {
+        "Business Information": ["License #", "Link", "Name", "Address","City","Zip","Phone #","Entity","Issue Date","Reissue Date","Expire Date"],
+        "License Status": ["Status"],
+        "Classifications": ["Classifications Name","Certifications Name"],
+        "Workers' Compensation": ["Title","Policy Number","Effective Date","Expire Date","Workers' Compensation History Link","Insurance Company Code",],
+        "Liability Insurance Information": ["Title","Policy Number","Amount","Effective Date","Expiration Date"],
+        "Miscellaneous Information": ["Title"],
+        "Other": ["Title"],
+        "Personnel": ["Name","Title","Association Date","Classification"],
+
+    }
 
     format_header_and_subheader(worksheet, header_subheader_mapping)
 
     
+    # Find an empty row to append the new record
+    empty_row = find_empty_row(worksheet)
 
-    append_live_data(worksheet, live_data)
+    append_live_data(worksheet, empty_row,live_data)
 
     auto_adjust_column_widths(worksheet)
 
     save_workbook(workbook, filename)
 
-if __name__ == "__main__":
-    header_subheader_mapping = {
-        "Business Information": ["License #", "Name", "Address","City","Zip","Phone #","Entity","Issue Date","Reissue Date","Expire Date"],
-        "License Status": ["Status"],
-        "Classifications": ["Classifications Name","Certifications Name"],
-        "Bonding Information": ["Contractor's Bond Title","Contractor's Bond Number ","Contractor's Bond Amount","Contractor's Bond Effective Date","Contractor's Bond  History Link","LLC EMPLOYEE/WORKER BOND Title","LLC EMPLOYEE/WORKER BOND Number","LLC EMPLOYEE/WORKER BOND Amount","LLC EMPLOYEE/WORKER BOND Effective Date","LLC EMPLOYEE/WORKER BOND History Link","Bond of Qualifying Individual Title","Bond of Qualifying Individual Effective Date","Bond of Qualifying Individual History Link"],
-        "Workers' Compensation": ["Title","Policy Number","Effective Date","Expire Date","Workers' Compensation History Link","Insurance Company Code",],
-        "Liability Insurance Information": ["Title","Policy Number","Amount","Effective Date","Expiration Date","Liability Insurance History","Insurance Company"],
-        "Miscellaneous Information": ["Title"],
-        "Other": ["Title"],
-        "Personnel": ["Name","Title","Association Date",""],
-
-    }
-    live_data = [
-        ['927409', 'SILVERSTRAND CONSTRUCTION', '10065 OLD GROVE RD STE 200', 'SAN DIEGO', '92131', '(858) 444-1967', '\nCorporation\n', '\n04/17/1990\n', '', '\n04/30/2024\n', '\nThis license is current and active.All information below should be reviewed.\n', 'B - GENERAL BUILDING\nA - GENERAL ENGINEERING\n', 'HAZ - HAZARDOUS SUBSTANCES REMOVAL\nASB - ASBESTOS\n', "This license filed a Contractor's Bond with  MERCHANTS BONDING COMPANY (MUTUAL).", 'Bond Number: 100058428', 'Bond Amount: $25,000', 'Effective Date: 04/13/2023', '/OnlineServices/CheckLicenseII/ContractorBondingHistory.aspx?LicNum=592080&BondType=CB', '', '', '', '', '', 'The qualifying individual WILLIAM CHARLES GABRIELSON  certified that he/she owns 10 percent or more of the voting stock/membership interest of this company; therefore, the Bond of Qualifying Individual is not required.', 'Effective Date: 04/17/1990', '', '', 'This license is exempt from having workers compensation insurance; they certified that they have no employees at this time.', '', 'Effective Date:', '03/03/2022', 'Expire Date:', 'None', '/OnlineServices/CheckLicenseII/WCHistory.aspx?LicNum=592080', None]]
-    main(header_subheader_mapping,live_data)

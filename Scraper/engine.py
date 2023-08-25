@@ -5,7 +5,6 @@ import os
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
-from undetected_chromedriver import Chrome, ChromeOptions
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 import traceback
@@ -60,6 +59,7 @@ class Engine:
         
         # Disable GPU acceleration and other browser extensions
         chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--disable-javascript")
         chrome_options.add_argument("--disable-extensions")
         
         # Disable various Chrome features that might trigger detection

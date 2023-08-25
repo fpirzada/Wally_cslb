@@ -42,7 +42,7 @@ def get_city():
 def set_driver():
     try:
         manager = Engine()
-        driver = manager.create_browser(timeout=5, headless=False, proxy=None, window_size='--start-maximized', clear_cache=False)
+        driver = manager.create_browser(timeout=5, headless=True, proxy=None, window_size='--start-maximized', clear_cache=False)
         return driver
     except Exception as e:
         print("===")
@@ -67,6 +67,8 @@ def click_next_page(driver,a_):
     # Perform the control+click action on the link
     action_chains.key_down(Keys.COMMAND).click(a_).key_up(Keys.COMMAND).perform()
 
+    time.sleep(2)
+
     # Switch to the newly opened tab
     new_window = driver.window_handles[-1]
     driver.switch_to.window(new_window)
@@ -81,7 +83,7 @@ def click_next_page(driver,a_):
 def LicenseDetail(driver,wait,LicNo,result):
     try:
         wait.until(EC.presence_of_element_located((By.ID, 'SearchByLicenseNumber')))
-        driver.find_element(By.ID,"MainContent_LicNo").send_keys("592080")
+        driver.find_element(By.ID,"MainContent_LicNo").send_keys(LicNo)
         driver.find_element(By.ID,"MainContent_Contractor_License_Number_Search").click()
     except Exception as e:
         print(e)
@@ -97,23 +99,21 @@ def LicenseDetail(driver,wait,LicNo,result):
         wait.until(EC.presence_of_element_located((By.ID, 'MainContent_LicTable')))
         get_InsuranceCompanyCode = driver.find_element(By.ID,"MainContent_WCStatus").find_elements(By.TAG_NAME,'a')
         for index, a_ in enumerate(get_InsuranceCompanyCode):
-            if index == 0:
-                try:
-                    main_window, soup = click_next_page(driver,a_)
-                    driver.implicitly_wait(2)
-                    soup_ = soup.find(id="MainContent_lblCode")
-                    print(soup_.text)
-                    InsuranceCompanyCode = soup_.text
-                except Exception as e:
-                    print("--")
-                    print(e)
-                    # driver.implicitly_wait(2)
-                    # soup = soup.find(id="MainContent_dlHisList")
-                    # print("-")
-                    # table_ = soup.find("table")
-                    # tr_ = table_.find_all("tr")
-                    # for tr in tr_:
-                    #     print(tr.text)
+            try:
+                print(a_.get_attribute('outerHTML'))
+                main_window, soup = click_next_page(driver,a_)
+                soup_ = soup.find(id="MainContent_lblCode")
+                print(soup_.text)
+                InsuranceCompanyCode = soup_.text
+            except Exception as e:
+                print("--")
+                print(e)
+                driver.implicitly_wait(2)
+                soup = soup.find(id="MainContent_dlHisList_hlInsuranceCompany_0")
+                print("-")
+                hlInsuranceCompany = soup.text
+                print(soup.text)
+                
             # Close the newly opened tab
             driver.close()
 
@@ -125,6 +125,8 @@ def LicenseDetail(driver,wait,LicNo,result):
 
     
     try:
+        time.sleep(1)
+        wait.until(EC.presence_of_element_located((By.ID, 'MainContent_PersonnelLink')))
         get_MainContent_PersonnelLink = driver.find_element(By.ID,"MainContent_PersonnelLink")
         main_window, soup = click_next_page(driver,get_MainContent_PersonnelLink)
         driver.implicitly_wait(2)
@@ -134,20 +136,26 @@ def LicenseDetail(driver,wait,LicNo,result):
                 tr = _.find_all("tr")
                 for tr_ in tr:
                     if tr_.find(id="MainContent_dlAssociated_hlName_0"):
-                        P_Name = tr_.text
+                        P_Name = tr_.find(id="MainContent_dlAssociated_hlName_0").text
                     if tr_.find(id="MainContent_dlAssociated_lblTitle_0"):
-                        P_Title = tr_.text
+                        P_Title = tr_.find(id="MainContent_dlAssociated_lblTitle_0").text
                     if tr_.find(id="MainContent_dlAssociated_lblAssociationDate_0"):
-                        P_AssociationDate = tr_.text
+                        P_AssociationDate = tr_.find(id="MainContent_dlAssociated_lblAssociationDate_0").text
                     if tr_.find(id="MainContent_dlAssociated_lblClassification_0"):
-                        P_Classification = tr_.text
+                        P_Classification = tr_.find(id="MainContent_dlAssociated_lblClassification_0").text
             
         # Close the newly opened tab
         driver.close()
 
         # Switch back to the main window
         driver.switch_to.window(main_window)
+        result.append((28,hlInsuranceCompany))
 
+        result.append((20,InsuranceCompanyCode))
+        result.append((28,P_Name))
+        result.append((29,P_Title))
+        result.append((30,P_AssociationDate))
+        result.append((31,P_Classification))
     except Exception as e:
         print(e)
 
@@ -162,270 +170,144 @@ def LicenseDetail(driver,wait,LicNo,result):
         # print(soup[0])
         soup = soup.find(id="MainContent_LicTable")
         soup = soup.find_all('tr')
-
-        MainContent_Entity = False
-        MainContent_IssDt = False
-        MainContent_ReIssueDt = False
-        MainContent_ExpDt = False
-
-        MainContent_Status = False
-        MainContent_ClassCellTable = False
-        MainContent_CertCellTable = False
-
-        Contractor_Bond = False
-        LLC_BOND = False
-        BQI_Bond = False
-        BQI_Bond_link = False
-
-        MainContent_LLIStatus_ = False
         for tr in soup:
-            
-            print("--")
-            if tr.select('h2.subheading'):
-                print("-------- "+tr.text+" --------")
-            if tr.select('td#MainContent_BusInfo'):
-                print(list(tr.stripped_strings))
-                for x in list(tr.stripped_strings):
-                    print(x)
-            if tr.select("td#MainContent_Entity"):
-                print("Entity : "+tr.text)
-                Entity = tr.text
-                result.append(Entity.replace("Entity", ""))
-                MainContent_Entity = True
-            if tr.select("td#MainContent_IssDt"):
-                IssDt = tr.text
-                if MainContent_Entity:
-                    print("Issue Date : "+tr.text)
-                    result.append(IssDt.replace("Issue Date", ""))
-                    MainContent_IssDt = True
-                else:
-                    result.append('')
-                    result.append(IssDt.replace("Issue Date", ""))
-                    MainContent_IssDt = True
-                    
-            if tr.select("td#MainContent_ReIssueDt"):
-                ReIssueDt = tr.text
-                if MainContent_IssDt:
-                    print("Reissue Date : "+tr.text)
-                    result.append(ReIssueDt.replace("Reissue Date", ""))
-                    MainContent_ReIssueDt = True
-                else:
-                    result.append('')
-                    result.append(ReIssueDt.replace("Reissue Date", ""))
-                    MainContent_ReIssueDt = True
-
-            if tr.select("td#MainContent_ExpDt"):
-                ExpDt = tr.text
-                if MainContent_ReIssueDt:
-                    print("Expire Date : "+tr.text)
-                    result.append(ExpDt.replace("Expire Date", ""))
-                    MainContent_ExpDt = True
-                else:
-                    result.append('')
-                    result.append(ExpDt.replace("Expire Date", ""))
-                    MainContent_ExpDt = True
-            
-            if tr.select("td#MainContent_Status"):
-                if MainContent_ExpDt:
-                    print("MainContent_Status : "+tr.text)
-                    result.append(tr.text)
-                    MainContent_Status = True
-                else:
-                    result.append('')
-                    result.append(tr.text)
-                    MainContent_Status = True
-
-            if tr.select("td#MainContent_ClassCellTable"):
-                a_ = tr.find_all('a')
-                class_ = ""
-                for a in a_:
-                    if MainContent_Status:
+            try:
+                print("--")
+                if tr.select('h2.subheading'):
+                    print("-------- "+tr.text+" --------")
+                if tr.select('td#MainContent_BusInfo'):
+                    print(list(tr.stripped_strings))
+                    for x in list(tr.stripped_strings):
+                        print(x)
+                if tr.find(id="MainContent_Entity"):
+                    Entity = tr.find(id="MainContent_Entity").text
+                    result.append((8,Entity))
+                    print(Entity)
+                if tr.find(id="MainContent_IssDt"):
+                    IssDt = tr.find(id="MainContent_IssDt").text
+                    result.append((9,IssDt))
+                    print(IssDt)
+                if tr.find(id="MainContent_ReIssueDt"):
+                    ReIssueDt = tr.find(id="MainContent_ReIssueDt").text
+                    result.append((10,ReIssueDt))
+                    print(ReIssueDt)
+                if tr.find(id="MainContent_ExpDt"):
+                    ExpDt = tr.find(id="MainContent_ExpDt").text
+                    result.append((11,ExpDt))
+                    print(ExpDt)
+                if tr.find(id="MainContent_Status"):
+                    MainContent_Status = tr.find(id="MainContent_Status").find('span').text
+                    result.append((12,MainContent_Status))
+                    print(MainContent_Status)
+                if tr.find(id="MainContent_ClassCellTable"):
+                    a_ = tr.find_all('a')
+                    class_ = ""
+                    for a in a_:
+                        class_ += a.text + "\n"
                         print("MainContent_ClassCellTable : "+a.text)
                         print(a['href'])
-                        class_ += a.text + "\n"
-
-                        MainContent_ClassCellTable = True
-                    else:
-                        result.append('')
-                        class_ += a.text + "\n"
-                        print(a['href'])
-                        MainContent_ClassCellTable = True
-                result.append(class_)
+                    result.append((13,class_))
+            except Exception as e:
+                print("@@@@@@@@@@@@@")
+                print(e)
 
             if tr.select("td#MainContent_CertCellTable"):
                 a_ = tr.find_all('a')
                 Cert_ = ""
                 for a in a_:
-                    if MainContent_ClassCellTable:
-                        print("MainContent_CertCellTable : "+a.text)
-                        print(a['href'])
-                        Cert_ += a.text + "\n"
-                        MainContent_CertCellTable = True
-                    else:
-                        result.append('')
-                        Cert_ += a.text + "\n"
-                        print(a['href'])
-                        MainContent_CertCellTable = True
-                result.append(Cert_)
-            if tr.select("td#MainContent_BondingCellTable"):
-                MainContent_BondingCellTable_all = tr.find_all(['p', 'a', 'table'])
-                count_ = 0
-                for element in MainContent_BondingCellTable_all:
-                    if element.name == 'table' and "Contractor's" in element.text:
-                        if MainContent_CertCellTable:
-                            Contractor_Bond = True
-                        else:
-                            result.append('')
-                            Contractor_Bond = True
-                    
-                    if element.name == 'table' and "LLC" in element.text:
-                        if Contractor_Bond:
-                            LLC_BOND = True
-                            if count_ == 5:
-                                pass
-                            else:
-                                re_count = 5 - count_
-                                for x in range(re_count):
-                                    result.append('')
-                        else:
-                            result.append('')
-                            result.append('')
-                            result.append('')
-                            result.append('')
-                            result.append('')
-                            LLC_BOND = True
-
-                    if element.name == 'table' and "Qualifying" in element.text:
-                        if LLC_BOND:
-                            BQI_Bond = True
-                            if count_ == 10:
-                                pass
-                            else:
-                                re_count = 10 - count_
-                                for x in range(re_count):
-                                    result.append('')
-                        else:
-                            result.append('')
-                            result.append('')
-                            result.append('')
-                            result.append('')
-                            result.append('')
-                            BQI_Bond = True
-
-                    if element.name == 'table':
-                        print("-------- "+element.text+" --------")
-                    elif element.name == 'p':
-                        result.append(element.text)
-                        print(element.text)
-                    elif element.name == 'a':
-                        if "BQI" in element.text:
-                            BQI_Bond_link = True
-                        if "History" in element.text:
-                            result.append(element['href'])
-                            print('Link:', element['href'])
-                        
+                    print("MainContent_CertCellTable : "+a.text)
+                    print(a['href'])
+                    Cert_ += a.text + "\n"
+                result.append((14,Cert_))
             
-            if tr.select("td#MainContent_WCStatus"):
-                PolicyNumber = False
-                EffectiveDate = False
-                ExpireDate = False
-                History = False
-                count_ = 0
-                if BQI_Bond_link == False:
-                    result.append("")
-                print(tr.select("td#MainContent_WCStatus"))
+            
+            if tr.find(id="MainContent_WCStatus"):
+                print(tr.find(id="MainContent_WCStatus"))
                 print(list(tr.stripped_strings))
-                for x in list(tr.stripped_strings):
-                    if "Policy Number" in x:
-                        PolicyNumber = True
-                    if "Effective Date" in x:
-                        if PolicyNumber:
-                            EffectiveDate = True
-                        else:
-                            result.append("")
-                            EffectiveDate = True
+                data = list(tr.stripped_strings)
+                print("==================")
+                # Iterate through the data list
 
-                    if "Expire Date" in x:
-                        if EffectiveDate:
-                            ExpireDate = True
-                        else:
-                            result.append("")
-                            ExpireDate = True
-
-                    if "History" in x:
-                        if ExpireDate:
-                            History = True
-                        else:
-                            result.append("")
-                            History = True
-                    else:
-                        count_ += 1
-                        result.append(x)
-                if tr.find("a"):
-                    if History == False:
-                        result.append(x)
-                    if "History" in tr.find("a").text:
-                        count_ += 1
-                        print(tr.find("a")['href'])
-                        result.append(tr.find("a")['href'])
+                for i in range(len(data)):
+                    try:
+                        if "This license has workers" in data[i]:
+                            print(data[i + 1])
+                            result.append((15,data[i + 1]))
+                        elif "exempt" in data[i]:
+                            result.append((15,""))
+                            print("exempt")
+                        elif "Policy Number" in data[i]:
+                            print(data[i + 1])
+                            result.append((16,data[i + 1]))
+                        elif "Effective Date" in data[i]:
+                            print(data[i + 1])
+                            result.append((17,data[i + 1]))
+                        elif "Expire Date" in data[i]:
+                            print(data[i + 1])
+                            result.append((18,data[i + 1]))
+                    except Exception as e:
+                        print("--MainContent_WCStatus-- ERROR")
+                        print(e)
+                try:
+                    Status = tr.find(id="MainContent_WCStatus").find_all('p')
+                    print(Status)
+                    print(Status[1])
+                    if   "History" in Status[1].text:
+                        print(Status[1].find("a")['href'])
+                        result.append((19,Status[1].find("a")['href']))
+                except Exception as e:
+                    print("--MainContent_WCStatus-- A -- ERROR")
+                    print(e)
                 
-                result.append(InsuranceCompanyCode)
-                count_ += 1
-                if count_ != 6:
-                    re_count = 6 - count_
-                    for x in range(re_count):
-                        result.append('')
-            
-            
-            if tr.select("td#MainContent_LLIStatus"):
-                count_ = 0
+            if tr.find(id="MainContent_LLIStatus"):
                 MainContent_LLIStatus_all = tr.find_all(['p'])
-                for element in MainContent_LLIStatus_all:
-                    if element.name == 'p':
-                        print(element.text)
-                        count_ += 1
-                        result.append(element.text)
-                    if element.name == 'a':
-                        if "History" in element.text:
-                            count_ += 1
-                            result.append(element['href'])
-                            MainContent_LLIStatus_ =True
-                
-                if count_ != 7:
-                    re_count =7 - count_
-                    for x in range(re_count):
-                        result.append('')
+                for x in MainContent_LLIStatus_all:
+                    if x.find('a'):
+                        result.append((21,x.find('a').text))
+                    if "Policy Number" in x.text:
+                        print(x.text)
+                        PolicyNumber = x.text.replace("Policy Number:","")
+                        result.append((22,PolicyNumber))
+                    if "Amount" in x.text:
+                        print(x.text)
+                        Amount = x.text.replace("Amount:","")
+                        result.append((23,Amount))
+                    if "Effective Date" in x.text:
+                        print(x.text)
+                        Effective = x.text.replace("Effective Date:","")
+                        result.append((24,Effective))
+                    if "Expiration Date" in x.text:
+                        print(x.text)
+                        Expiration = x.text.replace("Expiration Date:","")
+                        result.append((25,Expiration))
 
-            if tr.select("td#MainContent_ActionCodesCellTable"):
-                if MainContent_LLIStatus_:
-                    MainContent_ActionCodesCellTable_all = tr.find_all(['li'])
-                    Miscellaneous_ = ""
-                    for element in MainContent_ActionCodesCellTable_all:
-                        if element.name == 'li':
-                            Miscellaneous_ += element.text + "\n"
-                    result.append(Miscellaneous_)
-                else:
-                    result.append('')
-                    MainContent_ActionCodesCellTable_all = tr.find_all(['li'])
-                    Miscellaneous_ = ""
-                    for element in MainContent_ActionCodesCellTable_all:
-                        if element.name == 'li':
-                            Miscellaneous_ += element.text + "\n"
-                    result.append(Miscellaneous_)
+            if tr.find(id="MainContent_ActionCodesCellTable"):
+            
+                MainContent_ActionCodesCellTable_all = tr.find_all(['li'])
+                Miscellaneous_ = ""
+                for element in MainContent_ActionCodesCellTable_all:
+                    if element.name == 'li':
+                        Miscellaneous_ += element.text + "\n"
+                result.append((26,Miscellaneous_))
+            
+            
 
-            print(result)
-            print("++++++++++++")
-
-            if tr.select("td#MainContent_MultiLicDisplay"):
-                result.append(tr.text)
+            if tr.find(id="MainContent_MultiLicDisplay"):
                 print(tr.text)
-    
+                result.append((27,tr.text))
+        return result
     except Exception as e:
+        print("--000--")
         print(e)
 
     
-
-   
+def pagination(driver):
+    page_source = driver.page_source
+    soup = BeautifulSoup(page_source, 'html.parser')
+    if soup.select("tr.GridPager"):
+        return driver.find_element(By.CSS_SELECTOR,"tr.GridPager").find_elements(By.TAG_NAME,"td")
+    else:
+        pass
 def ZipCodeSearch(driver,wait):
     States = get_city()
     for State, list_citys in States.items():
@@ -453,35 +335,69 @@ def ZipCodeSearch(driver,wait):
                     # Do something with the selected option (e.g., print it)
                     print(f"Selected option: {options[index].text} | index is: {index}")
                     driver.find_element(By.CSS_SELECTOR,".SearchButton").click()
-                    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.section')))
+                    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'tr.GridItem')))
                     try:
-                        GridItem = driver.find_elements(By.CSS_SELECTOR,'table.Grid tr')
-                        for index, list in enumerate(GridItem):
-                            data = []
-                            if index == 0:
-                                pass
+                        count_page = 0
+                        first_time = True
+                        while True:
+                            GridItem = driver.find_elements(By.CSS_SELECTOR,'table.Grid tr')
+                            print(len(GridItem))
+                            for index, list in enumerate(range(len(GridItem)-2)):
+                                if GridItem[list]:
+                                    print(index)
+                                    data = []
+                                    if index == 0:
+                                        pass
+                                    else:
+                                        try:
+                                            row = GridItem[list].find_elements(By.TAG_NAME,'td')
+                                            license_a = row[1].find_element(By.TAG_NAME,"a").get_attribute('href')
+                                            license = row[1].text
+                                            data.append((1,license))
+                                            data.append((2,license_a))
+                                            data.append((3,row[2].text))
+                                            data.append((4,row[3].text))
+                                            data.append((5,row[4].text))
+                                            data.append((6,row[5].text))
+                                            data.append((7,row[6].text))
+                                        except Exception as e:
+                                            print(e)
+                                        
+                                        print(license_a)
+                                        print(license)
+                                        newTab(driver,license_a)
+                                        data = LicenseDetail(driver,wait,license,data)
+                                        print("=======================")
+                                        print(data)
+                                        print("=======================")
+                                        main(data)
+                                        closeTab(driver)
+                            print("====")
+                            page_ = pagination(driver)
+                            if page_:
+                                
+                                count_page += 1
+                                try:
+                                    if page_[count_page].text ==  str(count_page) or page_[count_page].text == "...":
+                                        if "href" in page_[count_page].get_attribute('outerHTML'):
+                                            page_[count_page].find_element(By.TAG_NAME,"a").click()
+                                            time.sleep(10)
+                                        else:
+                                            print("--")
+                                    else:
+                                        print("==")
+                                        break
+                                except Exception as e:
+                                    print(e)  
+                                    break
                             else:
-                                row = list.find_elements(By.TAG_NAME,'td')
-                                for x in row:
-                                    if list.find_element(By.TAG_NAME,'a'):
-                                        license_a = list.find_element(By.TAG_NAME,'a')
-                                    if x != '':
-                                        data.append(x.text)
-                                license = license_a.text
-                                clean_data = [item for item in data if item.strip()]
-                                print(clean_data)
-                                print(license_a.get_attribute('href'))
-                                print(license)
-                                newTab(driver,license_a.get_attribute('href'))
-                                LicenseDetail(driver,wait,license,clean_data)
-                                breakpoint()
-                                closeTab(driver)
+                                break
                                 
                     except Exception as e:
                         print(e)
                     driver.back()
                 except Exception as e:
-                    print(e)   
+                    print(e)
 def run():
     driver = set_driver()
     wait = WebDriverWait(driver, 10)
