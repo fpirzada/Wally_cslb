@@ -353,13 +353,13 @@ def ZipCodeSearch(driver,wait):
                                             row = GridItem[list].find_elements(By.TAG_NAME,'td')
                                             license_a = row[1].find_element(By.TAG_NAME,"a").get_attribute('href')
                                             license = row[1].text
-                                            data.append((1,license))
-                                            data.append((2,license_a))
-                                            data.append((3,row[2].text))
-                                            data.append((4,row[3].text))
-                                            data.append((5,row[4].text))
-                                            data.append((6,row[5].text))
-                                            data.append((7,row[6].text))
+                                            data.append((4,license))
+                                            data.append((5,license_a))
+                                            data.append((1,row[2].text))
+                                            data.append((2,row[3].text))
+                                            data.append((6,row[4].text))
+                                            data.append((7,row[5].text))
+                                            data.append((3,row[6].text))
                                         except Exception as e:
                                             print(e)
                                         
