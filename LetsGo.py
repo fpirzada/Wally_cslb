@@ -98,58 +98,83 @@ def LicenseDetail(driver,wait,LicNo,result):
     try:
         wait.until(EC.presence_of_element_located((By.ID, 'MainContent_LicTable')))
         get_InsuranceCompanyCode = driver.find_element(By.ID,"MainContent_WCStatus").find_elements(By.TAG_NAME,'a')
+        print(len(get_InsuranceCompanyCode))
         for index, a_ in enumerate(get_InsuranceCompanyCode):
             try:
-                print(a_.get_attribute('outerHTML'))
                 main_window, soup = click_next_page(driver,a_)
-                soup_ = soup.find(id="MainContent_lblCode")
+                # time.sleep(3)
+                wait.until(EC.presence_of_element_located((By.ID, 'MainContent_lblCode')))
+                soup_ = driver.find_element(By.ID,"MainContent_lblCode")
+                # soup_ = soup.find(id="MainContent_lblCode")
                 print(soup_.text)
                 InsuranceCompanyCode = soup_.text
+                
             except Exception as e:
-                print("--")
-                print(e)
-                driver.implicitly_wait(2)
+                print("NO Worker's LINK")
+                # print(e)
                 soup = soup.find(id="MainContent_dlHisList_hlInsuranceCompany_0")
                 print("-")
                 hlInsuranceCompany = soup.text
                 print(soup.text)
-                
-            # Close the newly opened tab
-            driver.close()
+                result.append((15,hlInsuranceCompany))
+            finally:     
+                # Close the newly opened tab
+                driver.close()
 
-            # Switch back to the main window
-            driver.switch_to.window(main_window)
+                # Switch back to the main window
+                driver.switch_to.window(main_window)
 
     except Exception as e:
         print(e)
 
     
     try:
-        time.sleep(1)
-        wait.until(EC.presence_of_element_located((By.ID, 'MainContent_PersonnelLink')))
-        get_MainContent_PersonnelLink = driver.find_element(By.ID,"MainContent_PersonnelLink")
-        main_window, soup = click_next_page(driver,get_MainContent_PersonnelLink)
-        driver.implicitly_wait(2)
-        soup_ = soup.find(id="MainContent_dlAssociated").find_all("table")
-        for index, _ in enumerate(soup_):
-            if index == 0:
-                tr = _.find_all("tr")
-                for tr_ in tr:
-                    if tr_.find(id="MainContent_dlAssociated_hlName_0"):
-                        P_Name = tr_.find(id="MainContent_dlAssociated_hlName_0").text
-                    if tr_.find(id="MainContent_dlAssociated_lblTitle_0"):
-                        P_Title = tr_.find(id="MainContent_dlAssociated_lblTitle_0").text
-                    if tr_.find(id="MainContent_dlAssociated_lblAssociationDate_0"):
-                        P_AssociationDate = tr_.find(id="MainContent_dlAssociated_lblAssociationDate_0").text
-                    if tr_.find(id="MainContent_dlAssociated_lblClassification_0"):
-                        P_Classification = tr_.find(id="MainContent_dlAssociated_lblClassification_0").text
-            
+        try:
+            print("-1")
+            time.sleep(3)
+
+            wait.until(EC.presence_of_element_located((By.ID, 'MainContent_PersonnelLink')))
+            print("-2")
+            get_MainContent_PersonnelLink = driver.find_element(By.ID,"MainContent_PersonnelLink")
+            print("-3")
+            main_window, soup = click_next_page(driver,get_MainContent_PersonnelLink)
+            print("-4")
+        except Exception as e:
+            # print(driver.page_source)
+            print("-- driver.find_element -- : MainContent_PersonnelLink")
+            print(e)
+            breakpoint()
+        try:
+            tr_=soup
+            # tr_ = soup.find(id="MainContent_dlAssociated")
+            # print("-5")
+
+            if tr_.find(id="MainContent_dlAssociated_hlName_0"):
+                P_Name = tr_.find(id="MainContent_dlAssociated_hlName_0").text
+            print("-6")
+
+            if tr_.find(id="MainContent_dlAssociated_lblTitle_0"):
+                P_Title = tr_.find(id="MainContent_dlAssociated_lblTitle_0").text
+            print("-7")
+
+            if tr_.find(id="MainContent_dlAssociated_lblAssociationDate_0"):
+                P_AssociationDate = tr_.find(id="MainContent_dlAssociated_lblAssociationDate_0").text
+            print("-8")
+
+            if tr_.find(id="MainContent_dlAssociated_lblClassification_0"):
+                P_Classification = tr_.find(id="MainContent_dlAssociated_lblClassification_0").text
+            print("-9")
+
+        except Exception as e:
+            print("-- inside of the loop MainContent_PersonnelLink")
+            print(driver.page_source)
+            breakpoint()
+            print(e)
         # Close the newly opened tab
         driver.close()
 
         # Switch back to the main window
         driver.switch_to.window(main_window)
-        result.append((28,hlInsuranceCompany))
 
         result.append((20,InsuranceCompanyCode))
         result.append((28,P_Name))
@@ -157,7 +182,13 @@ def LicenseDetail(driver,wait,LicNo,result):
         result.append((30,P_AssociationDate))
         result.append((31,P_Classification))
     except Exception as e:
+        print("MainContent_PersonnelLink not found")
         print(e)
+        # Close the newly opened tab
+        driver.close()
+
+        # Switch back to the main window
+        driver.switch_to.window(main_window)
 
     try:
         wait.until(EC.presence_of_element_located((By.ID, 'MainContent_LicTable')))
@@ -300,8 +331,9 @@ def LicenseDetail(driver,wait,LicNo,result):
                 result.append((27,tr.text))
         return result
     except Exception as e:
-        print("--000--")
+        print("MainContent_LicTable ERROR")
         print(e)
+        closeTab(driver)
 
     
 def pagination(driver):
@@ -316,7 +348,7 @@ def ZipCodeSearch(driver,wait):
     for State, list_citys in States.items():
         for city in list_citys:
             click_FindMyLicensedContractor(driver,wait)
-            
+            wait.until(EC.presence_of_element_located((By.ID, 'ddlLicenseType')))
             # Find the dropdown element by its ID
             dropdown_element = driver.find_element(By.ID,'ddlLicenseType')
             # Initialize the Select class with the dropdown element
@@ -330,7 +362,7 @@ def ZipCodeSearch(driver,wait):
                     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input.form-control.ui-autocomplete-input')))
                     # Find an input field by its ID and type text into it
                     input_field = driver.find_element(By.CSS_SELECTOR,'input.form-control.ui-autocomplete-input')
-                    input_field.send_keys(city)
+                    input_field.send_keys("san diego")
                     dropdown_element = driver.find_element(By.ID,'ddlLicenseType')
                     dropdown = Select(dropdown_element)
                     options = dropdown.options
@@ -338,66 +370,72 @@ def ZipCodeSearch(driver,wait):
                     # Do something with the selected option (e.g., print it)
                     print(f"Selected option: {options[index].text} | index is: {index}")
                     driver.find_element(By.CSS_SELECTOR,".SearchButton").click()
-                    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'tr.GridItem')))
-                    try:
-                        count_page = 0
-                        first_time = True
-                        while True:
-                            GridItem = driver.find_elements(By.CSS_SELECTOR,'table.Grid tr')
-                            print(len(GridItem))
-                            for index, list in enumerate(range(len(GridItem)-2)):
-                                if GridItem[list]:
-                                    print(index)
-                                    data = []
-                                    if index == 0:
-                                        pass
-                                    else:
-                                        try:
-                                            row = GridItem[list].find_elements(By.TAG_NAME,'td')
-                                            license_a = row[1].find_element(By.TAG_NAME,"a").get_attribute('href')
-                                            license = row[1].text
-                                            data.append((6,license))
-                                            data.append((7,license_a))
-                                            data.append((1,row[2].text))
-                                            data.append((2,row[3].text))
-                                            data.append((3,row[4].text))
-                                            data.append((4,row[5].text))
-                                            data.append((5,row[6].text))
-                                        except Exception as e:
-                                            print(e)
-                                        
-                                        print(license_a)
-                                        print(license)
-                                        newTab(driver,license_a)
-                                        data = LicenseDetail(driver,wait,license,data)
-                                        print("=======================")
-                                        print(data)
-                                        print("=======================")
-                                        main(data)
-                                        closeTab(driver)
-                            print("====")
-                            page_ = pagination(driver)
-                            if page_:
-                                
-                                count_page += 1
-                                try:
-                                    if page_[count_page].text ==  str(count_page) or page_[count_page].text == "...":
-                                        if "href" in page_[count_page].get_attribute('outerHTML'):
-                                            page_[count_page].find_element(By.TAG_NAME,"a").click()
-                                            time.sleep(10)
+                    time.sleep(7)
+                    page_source = driver.page_source
+                    soup = BeautifulSoup(page_source, 'html.parser')
+                    if soup.select("tr.GridItem"):
+                        try:
+                            count_page = 0
+                            first_time = True
+                            while True:
+                                GridItem = driver.find_elements(By.CSS_SELECTOR,'table.Grid tr')
+                                print(len(GridItem))
+                                for index, list in enumerate(range(len(GridItem)-2)):
+                                    if GridItem[list]:
+                                        print(index)
+                                        data = []
+                                        if index == 0:
+                                            pass
                                         else:
-                                            print("--")
-                                    else:
-                                        print("==")
+                                            try:
+                                                row = GridItem[list].find_elements(By.TAG_NAME,'td')
+                                                license_a = row[1].find_element(By.TAG_NAME,"a").get_attribute('href')
+                                                license = row[1].text
+                                                data.append((6,license))
+                                                data.append((7,license_a))
+                                                data.append((1,row[2].text))
+                                                data.append((2,row[3].text))
+                                                data.append((3,row[4].text))
+                                                data.append((4,row[5].text))
+                                                data.append((5,row[6].text))
+                                            except Exception as e:
+                                                print(e)
+                                            
+                                            print(license_a)
+                                            print(license)
+                                            newTab(driver,license_a)
+                                            data = LicenseDetail(driver,wait,license,data)
+                                            print("=======================")
+                                            print(data)
+                                            print("=======================")
+                                            main(data)
+                                            closeTab(driver)
+                                print("====")
+                                page_ = pagination(driver)
+                                if page_:
+                                    
+                                    count_page += 1
+                                    try:
+                                        if page_[count_page].text ==  str(count_page) or page_[count_page].text == "...":
+                                            if "href" in page_[count_page].get_attribute('outerHTML'):
+                                                page_[count_page].find_element(By.TAG_NAME,"a").click()
+                                                time.sleep(10)
+                                            else:
+                                                print("--")
+                                        else:
+                                            print("==")
+                                            break
+                                    except Exception as e:
+                                        print(e)  
                                         break
-                                except Exception as e:
-                                    print(e)  
+                                else:
                                     break
-                            else:
-                                break
+                        except Exception as e:
+                            print(e)
+                    else:
+                        print("No list found")
                                 
-                    except Exception as e:
-                        print(e)
+                    
                     driver.back()
                 except Exception as e:
                     print(e)
@@ -409,4 +447,5 @@ def run():
 
 if __name__=="__main__":
     run()
+
 

@@ -66,7 +66,7 @@ def main(live_data):
     worksheet = workbook.active
 
     header_subheader_mapping = {
-        "Business Information": ["Name", "Address","Phone #","License #", "Link", "City","Zip","Entity","Issue Date","Reissue Date","Expire Date"],
+        "Business Information": ["Name", "Address","Phone #","City","Zip","License #", "Link", "Entity","Issue Date","Reissue Date","Expire Date"],
         "License Status": ["Status"],
         "Classifications": ["Classifications Name","Certifications Name"],
         "Workers' Compensation": ["Title","Policy Number","Effective Date","Expire Date","Workers' Compensation History Link","Insurance Company Code",],
