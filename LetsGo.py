@@ -197,7 +197,10 @@ def LicenseDetail(driver,wait,LicNo,result):
                     print(ExpDt)
                 if tr.find(id="MainContent_Status"):
                     MainContent_Status = tr.find(id="MainContent_Status").find('span').text
-                    result.append((12,MainContent_Status))
+                    if "This license is current and active" in MainContent_Status:
+                        result.append((12,"active"))
+                    else:
+                        result.append((12,"inactive"))
                     print(MainContent_Status)
                 if tr.find(id="MainContent_ClassCellTable"):
                     a_ = tr.find_all('a')
@@ -353,13 +356,13 @@ def ZipCodeSearch(driver,wait):
                                             row = GridItem[list].find_elements(By.TAG_NAME,'td')
                                             license_a = row[1].find_element(By.TAG_NAME,"a").get_attribute('href')
                                             license = row[1].text
-                                            data.append((4,license))
-                                            data.append((5,license_a))
+                                            data.append((6,license))
+                                            data.append((7,license_a))
                                             data.append((1,row[2].text))
                                             data.append((2,row[3].text))
-                                            data.append((6,row[4].text))
-                                            data.append((7,row[5].text))
-                                            data.append((3,row[6].text))
+                                            data.append((3,row[4].text))
+                                            data.append((4,row[5].text))
+                                            data.append((5,row[6].text))
                                         except Exception as e:
                                             print(e)
                                         
