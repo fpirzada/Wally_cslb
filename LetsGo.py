@@ -97,32 +97,41 @@ def LicenseDetail(driver,wait,LicNo,result):
 
     try:
         wait.until(EC.presence_of_element_located((By.ID, 'MainContent_LicTable')))
-        get_InsuranceCompanyCode = driver.find_element(By.ID,"MainContent_WCStatus").find_elements(By.TAG_NAME,'a')
-        print(len(get_InsuranceCompanyCode))
-        for index, a_ in enumerate(get_InsuranceCompanyCode):
-            try:
-                main_window, soup = click_next_page(driver,a_)
-                # time.sleep(3)
-                wait.until(EC.presence_of_element_located((By.ID, 'MainContent_lblCode')))
-                soup_ = driver.find_element(By.ID,"MainContent_lblCode")
-                # soup_ = soup.find(id="MainContent_lblCode")
-                print(soup_.text)
-                InsuranceCompanyCode = soup_.text
-                
-            except Exception as e:
-                print("NO Worker's LINK")
-                # print(e)
-                soup = soup.find(id="MainContent_dlHisList_hlInsuranceCompany_0")
-                print("-")
-                hlInsuranceCompany = soup.text
-                print(soup.text)
-                result.append((15,hlInsuranceCompany))
-            finally:     
-                # Close the newly opened tab
-                driver.close()
+        get_InsuranceCompanyCode = driver.find_element(By.ID,"MainContent_WCStatus")
+        page_source = get_InsuranceCompanyCode.get_attribute('outerHTML')
+        soup = BeautifulSoup(page_source, 'html.parser')
+        if soup.find("a"):
+            get_InsuranceCompanyCode = get_InsuranceCompanyCode.find_elements(By.TAG_NAME,'a')
+            print(len(get_InsuranceCompanyCode))
+            for index, a_ in enumerate(get_InsuranceCompanyCode):
+                try:
+                    main_window, soup = click_next_page(driver,a_)
+                    time.sleep(3)
+                    # wait.until(EC.presence_of_element_located((By.ID, 'MainContent_lblCode')))
+                    # soup_ = driver.find_element(By.ID,"MainContent_lblCode")
+                    soup_ = soup.find(id="MainContent_lblCode")
+                    print(soup_.text)
+                    InsuranceCompanyCode = soup_.text
+                    # Close the newly opened tab
+                    driver.close()
 
-                # Switch back to the main window
-                driver.switch_to.window(main_window)
+                    # Switch back to the main window
+                    driver.switch_to.window(main_window)  
+                except Exception as e:
+                    print("NO Worker's LINK")
+                    # print(e)
+                    soup = soup.find(id="MainContent_dlHisList_hlInsuranceCompany_0")
+                    print("-")
+                    hlInsuranceCompany = soup.text
+                    print(soup.text)
+                    result.append((15,hlInsuranceCompany))
+                    # Close the newly opened tab
+                    driver.close()
+
+                    # Switch back to the main window
+                    driver.switch_to.window(main_window)
+        else:
+            print("NO LINK FOR Workers' Compensation")
 
     except Exception as e:
         print(e)
@@ -131,19 +140,24 @@ def LicenseDetail(driver,wait,LicNo,result):
     try:
         try:
             print("-1")
-            time.sleep(3)
-
-            wait.until(EC.presence_of_element_located((By.ID, 'MainContent_PersonnelLink')))
+            time.sleep(1)
+            page_source = driver.page_source
+            soup = BeautifulSoup(page_source, 'html.parser')
+            # wait.until(EC.presence_of_element_located((By.ID, 'MainContent_PersonnelLink')))
             print("-2")
-            get_MainContent_PersonnelLink = driver.find_element(By.ID,"MainContent_PersonnelLink")
-            print("-3")
-            main_window, soup = click_next_page(driver,get_MainContent_PersonnelLink)
-            print("-4")
+            # get_MainContent_PersonnelLink = driver.find_element(By.ID,"MainContent_PersonnelLink")
+            if soup.find(id="MainContent_PersonnelLink"):
+                print("-3")
+                get_MainContent_PersonnelLink = driver.find_element(By.ID,"MainContent_PersonnelLink")
+                main_window, soup = click_next_page(driver,get_MainContent_PersonnelLink)
+                time.sleep(3)
+                print("-4")
+            else:
+                print("None MainContent_PersonnelLink")
         except Exception as e:
-            # print(driver.page_source)
+            print(driver.page_source)
             print("-- driver.find_element -- : MainContent_PersonnelLink")
             print(e)
-            breakpoint()
         try:
             tr_=soup
             # tr_ = soup.find(id="MainContent_dlAssociated")
@@ -151,18 +165,23 @@ def LicenseDetail(driver,wait,LicNo,result):
 
             if tr_.find(id="MainContent_dlAssociated_hlName_0"):
                 P_Name = tr_.find(id="MainContent_dlAssociated_hlName_0").text
+                print(P_Name)
+
             print("-6")
 
             if tr_.find(id="MainContent_dlAssociated_lblTitle_0"):
                 P_Title = tr_.find(id="MainContent_dlAssociated_lblTitle_0").text
+                print(P_Title)
             print("-7")
 
             if tr_.find(id="MainContent_dlAssociated_lblAssociationDate_0"):
                 P_AssociationDate = tr_.find(id="MainContent_dlAssociated_lblAssociationDate_0").text
+                print(P_AssociationDate)
             print("-8")
 
             if tr_.find(id="MainContent_dlAssociated_lblClassification_0"):
                 P_Classification = tr_.find(id="MainContent_dlAssociated_lblClassification_0").text
+                print(P_Classification)
             print("-9")
 
         except Exception as e:
